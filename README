@@ -1,0 +1,40 @@
+// Copyright Stamatin Teodor 315CA // 2022 - 2023
+
+                        Virtual memory allocator.
+
+Am inceput prin a aloca memorie pentru arena. Aceasta este o structura ce 
+contine dimensiunea zone si lista de blocuri alocate. 
+1. In dealloc arena fiecare block est eliberat dupa ce ne asiguram ca toate
+miniblock-urile din  acesta sunt eliberate. rw_buffer, miniblock si block 
+sunt setate la null pentru a evita memory leaks. 
+2. In alloc_block, primul caz pe care il verificam este cand arena este goala
+si block-ul pe care vrem sa il adaugam este singurul (primul) block din 
+aceasta. Daca nu este, verificam daca zona de memorie unde vrem sa adaugam
+block-ul este deja alocata, caz in care nu facem nimic cu arena. Daca nu 
+este, continuam prin a verifica cazul in care ne aflam, adica daca block-ul 
+pe care vrem sa il adaugam este primul din arena. Daca nu este, verificam 
+daca block-ul pe care vrem sa il adaugam este ultimul din arena. Daca nu este,
+verificam daca block-ul pe care vrem sa il adaugam este intre 2 block-uri
+deja existente. Urmatorul pas este sa verificam daca se lipeste de unul dintre
+ele, sau eventual de amandoua. Pentru cazul din urma, cele 2 block-uri fac
+merge in unul singur: se adauga miniblock-ul curent, iar apoi se iau pe rand
+miniblock-urile din al 2-lea block si copiaza la sfarsitul block-ului curent.
+Apoi se elibereaza block-ul.
+3. Free_block: Verificam daca adresa data este valida. Daca nu este, returnam
+eroarea. Daca este, verificam daca miniblock-ul pe care vrem sa il eliberam 
+este singurul din block-ul sau daca este unul din mai multi. Daca este singurul
+din block, eliberam block-ul. Daca este unul din mai multi, verificam daca este
+la sfarsit, la inceput sau in interiorul block-ului. Daca este in interior, 
+separam block-ul in 2 parti, copiem miniblock-urile din a 2 a parte a primului
+block si il redimensionam.
+4. Read: Verificam (din nou) daca adresa data este valida. Citim maximul dintre
+dimensiunea data si dimensiunea block-ului - adresa. Apoi cautam block-ul care
+contine miniblock-ul care contine adresa data. Apoi citim rw_buffer din
+miniblock-uri daca avem permisiune.
+5. Write: Asemanator ca la read, verificam daca adresa data este valida, ne 
+deplasam la miniblock-ul ce contine adresa dorita si scriem informatia in 
+rw_buffer daca avem permisiune.
+6. PMAP: pretty obvious, afisam dimensiunea arenei si calculam memoria libera,
+apoi luam fiecare block si miniblock si afisam informatiile necesare.
+7. MPROTECT: verificam persmisiune si daca adresa data este valida. Daca este,
+schimbam permisiunea din mibiblock.
